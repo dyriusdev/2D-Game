@@ -7,7 +7,7 @@ import engine.utils.Input;
 public class Engine implements Runnable {
 
     private final Thread engineThread;
-    private final Game game;
+    private final Instance instance;
 
     private boolean isRunning = false;
 
@@ -15,8 +15,8 @@ public class Engine implements Runnable {
     private Renderer renderer;
     private Input input;
 
-    public Engine(Game game) {
-        this.game = game;
+    public Engine(Instance instance) {
+        this.instance = instance;
         engineThread = new Thread(this);
     }
 
@@ -38,7 +38,7 @@ public class Engine implements Runnable {
     public void run() {
         isRunning = true;
 
-        double firstTime = 0, lastTime = System.nanoTime() / 1000000000d, passedTime = 0, unprocessedTime = 0, frameTime = 0;
+        double firstTime, lastTime = System.nanoTime() / 1000000000d, passedTime = 0, unprocessedTime = 0, frameTime = 0;
         int frames = 0, fps = 0;
 
         while (isRunning) {
@@ -55,7 +55,7 @@ public class Engine implements Runnable {
                 unprocessedTime -= updateCap;
                 canRender = true;
 
-                game.Update(this, (float) updateCap);
+                instance.Update(this, (float) updateCap);
 
                 input.Update();
 
@@ -67,7 +67,11 @@ public class Engine implements Runnable {
             }
 
             if (canRender) {
-                game.Render(this, renderer);
+                renderer.Clear();
+                instance.Render(this, renderer);
+
+                renderer.Process();
+
                 window.Update();
                 frames++;
             } else {

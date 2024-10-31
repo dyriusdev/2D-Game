@@ -2,7 +2,7 @@ package engine;
 
 import engine.graphics.Renderer;
 
-public abstract class Game {
+public abstract class Instance {
 
     public abstract void Update(Engine engine, float delta);
 
