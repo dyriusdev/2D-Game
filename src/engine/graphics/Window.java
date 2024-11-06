@@ -9,11 +9,8 @@ import java.awt.image.BufferedImage;
 
 public class Window {
 
-    private final JFrame frame;
     private final BufferedImage image;
     private final Canvas canvas;
-    private final BufferStrategy strategy;
-    private final Graphics graphics;
 
     public Window() {
         Dimension dimension = new Dimension((int)(Settings.Width * Settings.Scale), (int)(Settings.Height * Settings.Scale));
@@ -25,7 +22,7 @@ public class Window {
         canvas.setMaximumSize(dimension);
         canvas.setMinimumSize(dimension);
 
-        frame = new JFrame(Settings.Title);
+        JFrame frame = new JFrame(Settings.Title);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
 
@@ -37,16 +34,20 @@ public class Window {
         frame.setVisible(true);
 
         canvas.createBufferStrategy(2);
-        strategy = canvas.getBufferStrategy();
-        graphics = strategy.getDrawGraphics();
     }
 
     public void Update() {
+        // Fixing error of black window
+        BufferStrategy strategy = canvas.getBufferStrategy();
+        if (strategy == null) {
+            canvas.createBufferStrategy(2);
+            strategy = canvas.getBufferStrategy();
+        }
+
+        Graphics graphics = strategy.getDrawGraphics();
         graphics.drawImage(image, 0, 0, canvas.getWidth(), canvas.getHeight(), null);
         strategy.show();
     }
-
-    public JFrame GetFrame() { return frame; }
 
     public Canvas GetCanvas() { return canvas; }
 
