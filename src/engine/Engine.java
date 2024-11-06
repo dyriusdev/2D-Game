@@ -71,6 +71,7 @@ public class Engine implements Runnable {
                 instance.Render(this, renderer);
 
                 renderer.Process();
+                renderer.DrawText("Fps : " + fps, 0, 0, 0xffffffff);
 
                 window.Update();
                 frames++;

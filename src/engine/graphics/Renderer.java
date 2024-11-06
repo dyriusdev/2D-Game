@@ -11,6 +11,8 @@ import java.util.Arrays;
 
 public class Renderer {
 
+    private final Font font = Font.Standard;
+
     private final ArrayList<ImageRequest> imageRequests = new ArrayList<>();
     private final ArrayList<LightRequest> lightRequests = new ArrayList<>();
 
@@ -130,7 +132,21 @@ public class Renderer {
 
     public void DrawImageTile() {}
 
-    public void DrawText() {}
+    public void DrawText(String text, int xOffset, int yOffset, int color) {
+        text = text.toUpperCase();
+        int offset = 0;
+        for (int i = 0; i < text.length(); i++) {
+            int unicode = text.codePointAt(i) - 32;
+            for (int y = 0; y < font.GetImage().GetHeight(); y++) {
+                for (int x = 0; x < font.GetWidths()[unicode]; x++) {
+                    if (font.GetImage().GetPixels()[(x + font.GetOffsets()[unicode]) + y * font.GetImage().GetWidth()] == 0xffffffff) {
+                        SetPixel(x + xOffset + offset, y + yOffset, color);
+                    }
+                }
+            }
+            offset += font.GetWidths()[unicode];
+        }
+    }
 
 
 

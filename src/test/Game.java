@@ -19,7 +19,8 @@ public class Game extends Instance {
     }
 
     @Override
-    public void Update(Engine engine, float delta) {}
+    public void Update(Engine engine, float delta) {
+    }
 
     @Override
     public void Render(Engine engine, Renderer renderer) {
