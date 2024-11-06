@@ -8,6 +8,7 @@ import engine.utils.LightRequest;
 import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 
 public class Renderer {
 
@@ -16,8 +17,9 @@ public class Renderer {
     private final ArrayList<ImageRequest> imageRequests = new ArrayList<>();
     private final ArrayList<LightRequest> lightRequests = new ArrayList<>();
 
-    private int pixelWidth, pixelHeight, ambientColor = 0xff232323, zDepth = 0;
-    private int[] pixels, zBuffer, lightMap, lightBlock;
+    private final int pixelWidth, pixelHeight;
+    private final int[] pixels, zBuffer, lightMap, lightBlock;
+    private int ambientColor = 0xff232323, zDepth = 0;
     private boolean processing = false;
 
     public Renderer(Engine engine) {
@@ -40,22 +42,16 @@ public class Renderer {
         processing = true;
 
         // Sort image request based on zDepth
-        imageRequests.sort((request0, request1) -> {
-            if (request0.zDepth < request1.zDepth) { return -1; }
-            if (request0.zDepth > request1.zDepth) { return 1; }
-            return 0;
-        });
+        imageRequests.sort(Comparator.comparingInt(request0 -> request0.zDepth));
 
         // Draw requested images
-        for (int i = 0; i < imageRequests.size(); i++) {
-            ImageRequest request = imageRequests.get(i);
+        for (ImageRequest request : imageRequests) {
             SetZDepth(request.zDepth);
             DrawImage(request.image, request.xOffset, request.yOffset);
         }
 
         // Draw Lights
-        for (int i = 0; i < lightRequests.size(); i++) {
-            LightRequest request = lightRequests.get(i);
+        for (LightRequest request : lightRequests) {
             DrawLightRequest(request.light, request.xOffset, request.yOffset);
         }
 
@@ -69,6 +65,7 @@ public class Renderer {
         }
 
         imageRequests.clear();
+        lightRequests.clear();
         processing = false;
     }
 
@@ -130,7 +127,30 @@ public class Renderer {
         }
     }
 
-    public void DrawImageTile() {}
+    public void DrawImageTile(ImageTile image, int xOffset, int yOffset, int tileX, int tileY) {
+        if (image.IsAlpha() && !processing) {
+            imageRequests.add(new ImageRequest(image.GetTile(tileX, tileY), zDepth, xOffset, yOffset));
+            return;
+        }
+
+        // Check if the image is out of bounds
+        if (xOffset < -image.GetTileWidth() || yOffset < -image.GetTileHeight() || xOffset >= pixelWidth || yOffset >= pixelHeight) { return;  }
+
+        int newX = 0, newY = 0, newWidth = image.GetTileWidth(), newHeight = image.GetTileHeight();
+
+        // Clipping image
+        if (xOffset < 0) { newX -= xOffset; }
+        if (yOffset < 0) { newY -= yOffset; }
+        if (newWidth + xOffset >= pixelWidth) { newWidth -= newWidth + xOffset - pixelWidth; }
+        if (newHeight + yOffset >= pixelHeight) { newHeight -= newHeight + yOffset - pixelHeight; }
+
+        for (int y = newY; y < newHeight; y++) {
+            for (int x = newX; x < newWidth; x++) {
+                SetPixel(x + xOffset, y + yOffset, image.GetPixels()[(x + tileX * image.GetTileWidth()) + (y + tileY * image.GetTileHeight()) * image.GetWidth()]);
+                SetLightBlockMap(x + xOffset, y + yOffset, image.GetLightBlockMode());
+            }
+        }
+    }
 
     public void DrawText(String text, int xOffset, int yOffset, int color) {
         text = text.toUpperCase();
